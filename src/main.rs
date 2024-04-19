@@ -4,7 +4,7 @@ mod parser;
 
 fn main() {
     println!("Insert expression: ");
-
+    //must_interpreter::interprete();
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).expect("Failed to open stdin.");
 

@@ -4,11 +4,9 @@ use crate::ast::Bop::*;
 use crate::ast::Expression::*;
 
 use crate::lexer::Token::*;
-
 use crate::lexer::Token;
 
 use crate::ast::Expression;
-
 use crate::ast::Term;
 use crate::ast::Factor;
 

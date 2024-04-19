@@ -27,10 +27,10 @@ fn parse_token(c: char) -> Option<Token>{
 
 fn parse_buffer(buffer: &String, tokens: &mut Vec<Token>) {
     match buffer.parse(){
-        Ok(n) => tokens.push(Token::INT(n)),
+        Ok(n) => tokens.push(INT(n)),
         Err(_) => match buffer.as_str(){
             "" => (),
-            _ => tokens.push(Token::STRING(String::from(buffer)))
+            _ => tokens.push(STRING(String::from(buffer)))
         }
     }
 }
