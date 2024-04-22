@@ -2,7 +2,8 @@ pub enum Bop{
     Plus,
     Minus,
     Mult,
-    Div
+    Div,
+    Power
 }
 
 pub enum Factor{
@@ -13,7 +14,7 @@ pub enum Factor{
 
 pub enum Term{
     Factor(Factor),
-    ScalingOperation(Factor, Bop, Factor)
+    ScalingOperation(Factor, Bop, Box<Term>)
 }
 
 
@@ -21,6 +22,7 @@ pub enum Expression{
     Term(Term),
     AdditiveOperation(Term, Bop, Box<Expression>)
 }
+
 
 use Expression::*;
 use Term::*;
@@ -32,21 +34,22 @@ fn evaluate_operator(op: Bop, v1: i32, v2: i32) -> i32{
         Plus    => v1 + v2,
         Minus   => v1 - v2,
         Mult    => v1 * v2,
-        Div     => v1 / v2
+        Div     => v1 / v2,
+        Power   => v1.pow(v2 as u32)
     }
 }
 
 fn evaluate_factor(fact: Factor) -> i32{
-    match fact{
+    match fact {
         Int(n) => n,
         Expression(expr) => evaluate(*expr)
     }
 }
 
 fn evaluate_term(term: Term) -> i32{
-    match term{
+    match term {
         Factor(fact) => evaluate_factor(fact),
-        ScalingOperation(f1, op, f2) => evaluate_operator(op, evaluate_factor(f1), evaluate_factor(f2))
+        ScalingOperation(fact, op, term) => evaluate_operator(op, evaluate_factor(fact), evaluate_term(*term))
     }
 }
 

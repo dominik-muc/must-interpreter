@@ -32,14 +32,16 @@ fn parse_term(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Term, Stri
     let factor = parse_factor(it)?;
 
     match it.peek(){
+        | Some(POWER)
         | Some(MULT) 
         | Some(DIV) => {
             let op = match it.next().unwrap(){
                 MULT    => Mult,
                 DIV     => Div,
+                POWER   => Power,
                 _       => unreachable!()
             };
-            return Ok(ScalingOperation(factor, op, parse_factor(it)?));
+            return Ok(ScalingOperation(factor, op, Box::new(parse_term(it)?)));
         }
         _ => Ok(Factor(factor))
     }

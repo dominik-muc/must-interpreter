@@ -7,7 +7,8 @@ pub enum Token{
     MULT,
     DIV,
     LPAREN,
-    RPAREN
+    RPAREN,
+    POWER
 }
 
 use Token::*;
@@ -21,6 +22,7 @@ fn parse_token(c: char) -> Option<Token>{
         '/' => Some(DIV),
         '(' => Some(LPAREN),
         ')' => Some(RPAREN),
+        '^' => Some(POWER),
         _ => unreachable!()
     }
 }
@@ -42,7 +44,7 @@ pub fn parse_input(input: &String) -> Vec<Token> {
     for c in input.chars(){
         match c {
             'a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9' => buffer.push(c),
-            '+' | '-' | '*' | '/' | '(' | ')' | ' ' | '\n' | '\t' => {
+            '+' | '-' | '*' | '/' | '(' | ')' | '^' | ' ' | '\n' | '\t' => {
                 parse_buffer(&buffer, &mut tokens);
                 buffer = String::new();
                 match parse_token(c){
