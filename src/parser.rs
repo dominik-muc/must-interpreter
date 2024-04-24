@@ -1,4 +1,5 @@
 use crate::ast::Term::*;
+use crate::ast::Power::*;
 use crate::ast::Factor::*;
 use crate::ast::Bop::*;
 use crate::ast::Expression::*;
@@ -8,13 +9,16 @@ use crate::lexer::Token;
 
 use crate::ast::Expression;
 use crate::ast::Term;
+use crate::ast::Power;
 use crate::ast::Factor;
+use crate::ast::Value;
 
 use std::iter::Peekable;
 
 fn parse_factor(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Factor, String>{
     match it.next(){
-        Some(INT(n)) => return Ok(Int(n)),
+        Some(INT(n)) => return Ok(Number(Value::Int(n))),
+        Some(FLOAT(n)) => return Ok(Number(Value::Float(n))),
         Some(LPAREN) => {
             let expr = Expression(Box::new(parse_expression(it)?));
             match it.next(){
@@ -28,22 +32,35 @@ fn parse_factor(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Factor, 
     }
 }
 
-fn parse_term(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Term, String>{
+fn parse_power(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Power, String>{
     let factor = parse_factor(it)?;
 
     match it.peek(){
-        | Some(POWER)
+        Some(POWER) => {
+            let op = match it.next().unwrap(){
+                POWER   => Pow,
+                _       => unreachable!()
+            };
+            return Ok(PowerOperation(factor, op, Box::new(parse_power(it)?)));
+        }
+        _ => Ok(Factor(factor))
+    }
+}
+
+fn parse_term(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Term, String>{
+    let power = parse_power(it)?;
+
+    match it.peek(){
         | Some(MULT) 
         | Some(DIV) => {
             let op = match it.next().unwrap(){
                 MULT    => Mult,
                 DIV     => Div,
-                POWER   => Power,
                 _       => unreachable!()
             };
-            return Ok(ScalingOperation(factor, op, Box::new(parse_term(it)?)));
+            return Ok(ScalingOperation(power, op, Box::new(parse_term(it)?)));
         }
-        _ => Ok(Factor(factor))
+        _ => Ok(Power(power))
     }
 }
 

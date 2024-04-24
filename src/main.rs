@@ -26,5 +26,5 @@ fn main() {
 
     let value = ast::evaluate(expression);
 
-    println!("{value}");
+    println!("{value:?}");
 }
