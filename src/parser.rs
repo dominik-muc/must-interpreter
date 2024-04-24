@@ -17,8 +17,16 @@ use std::iter::Peekable;
 
 fn parse_factor(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Factor, String>{
     match it.next(){
-        Some(INT(n)) => return Ok(Number(Value::Int(n))),
-        Some(FLOAT(n)) => return Ok(Number(Value::Float(n))),
+        Some(INT(n)) => Ok(Number(Value::Int(n))),
+        Some(FLOAT(n)) => Ok(Number(Value::Float(n))),
+        Some(MINUS) => {
+            match it.next(){
+                Some(INT(n)) => Ok(Number(Value::Int(-n))),
+                Some(FLOAT(n)) => Ok(Number(Value::Float(-n))),
+                Some(other) => Err(format!("Unexpected token: {:?}", other)),
+                None => Err(format!("Expected value")),
+            }
+        },
         Some(LPAREN) => {
             let expr = Expression(Box::new(parse_expression(it)?));
             match it.next(){
@@ -37,11 +45,8 @@ fn parse_power(it: &mut Peekable<impl Iterator<Item=Token>>) -> Result<Power, St
 
     match it.peek(){
         Some(POWER) => {
-            let op = match it.next().unwrap(){
-                POWER   => Pow,
-                _       => unreachable!()
-            };
-            return Ok(PowerOperation(factor, op, Box::new(parse_power(it)?)));
+            it.next();
+            return Ok(PowerOperation(factor, Pow, Box::new(parse_power(it)?)));
         }
         _ => Ok(Factor(factor))
     }

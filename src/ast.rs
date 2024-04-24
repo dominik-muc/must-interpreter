@@ -42,7 +42,7 @@ fn evaluate_operator(op: Bop, v1: Value, v2: Value) -> Value{
         Minus   => v1 - v2,
         Mult    => v1 * v2,
         Div     => v1 / v2,
-        Pow   => v1.pow(v2)
+        Pow     => v1.pow(v2)
     }
 }
 
