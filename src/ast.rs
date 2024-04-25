@@ -1,75 +1,81 @@
 mod value;
 pub use value::Value;
-pub enum Bop{
+
+#[derive(Debug)]
+pub enum Bop {
     Plus,
     Minus,
     Mult,
     Div,
-    Pow
+    Pow,
 }
 
-pub enum Factor{
+#[derive(Debug)]
+pub enum Factor {
     Number(Value),
-    Expression(Box<Expression>)
+    Expression(Box<Expression>),
 }
 
-pub enum Power{
+#[derive(Debug)]
+pub enum Power {
     Factor(Factor),
-    PowerOperation(Factor, Bop, Box<Power>),
+    PowerOperation(Box<Power>, Bop, Factor),
 }
 
-pub enum Term{
+#[derive(Debug)]
+pub enum Term {
     Power(Power),
-    ScalingOperation(Power, Bop, Box<Term>)
+    ScalingOperation(Box<Term>, Bop, Power),
 }
 
-
-pub enum Expression{
+#[derive(Debug)]
+pub enum Expression {
     Term(Term),
-    AdditiveOperation(Term, Bop, Box<Expression>)
+    AdditiveOperation(Box<Expression>, Bop, Term),
 }
 
-
-use Expression::*;
-use Term::*;
-use Power::*;
-use Factor::*;
 use Bop::*;
 
-fn evaluate_operator(op: Bop, v1: Value, v2: Value) -> Value{
+fn evaluate_operator(op: Bop, v1: Value, v2: Value) -> Result<Value, String> {
     match op {
-        Plus    => v1 + v2,
-        Minus   => v1 - v2,
-        Mult    => v1 * v2,
-        Div     => v1 / v2,
-        Pow     => v1.pow(v2)
+        Plus => v1 + v2,
+        Minus => v1 - v2,
+        Mult => v1 * v2,
+        Div => v1 / v2,
+        Pow => v1.pow(v2),
     }
 }
 
-fn evaluate_factor(fact: Factor) -> Value{
+fn evaluate_factor(fact: Factor) -> Result<Value, String> {
     match fact {
-        Number(n) => n,
-        Expression(expr) => evaluate(*expr)
+        Factor::Number(n) => Ok(n),
+        Factor::Expression(expr) => evaluate(*expr),
     }
 }
 
-fn evaluate_power(power: Power) -> Value{
+fn evaluate_power(power: Power) -> Result<Value, String> {
     match power {
-        Factor(fact) => evaluate_factor(fact),
-        PowerOperation(fact, op, pow) => evaluate_operator(op, evaluate_factor(fact), evaluate_power(*pow))
+        Power::Factor(fact) => evaluate_factor(fact),
+        Power::PowerOperation(pow, op, fact) => {
+            evaluate_operator(op, evaluate_power(*pow)?, evaluate_factor(fact)?)
+        }
     }
 }
 
-fn evaluate_term(term: Term) -> Value{
+fn evaluate_term(term: Term) -> Result<Value, String> {
     match term {
-        Power(pow) => evaluate_power(pow),
-        ScalingOperation(pow, op, term) => evaluate_operator(op, evaluate_power(pow), evaluate_term(*term))
+        Term::Power(pow) => evaluate_power(pow),
+        Term::ScalingOperation(term, op, pow) => {
+            evaluate_operator(op, evaluate_term(*term)?, evaluate_power(pow)?)
+        }
     }
 }
 
-pub fn evaluate(expression: Expression) -> Value{
+pub fn evaluate(expression: Expression) -> Result<Value, String> {
     match expression {
-        Term(term) => evaluate_term(term),
-        AdditiveOperation(term, op, expr) => evaluate_operator(op, evaluate_term(term), evaluate(*expr))
+        Expression::Term(term) => evaluate_term(term),
+        Expression::AdditiveOperation(expr, op, term) => {
+            evaluate_operator(op, evaluate(*expr)?, evaluate_term(term)?)
+        }
     }
 }
